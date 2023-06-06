@@ -44,13 +44,12 @@
       <div class="modal-dish-details">
         <div>
           <h3>{{ selectedDish.name }}</h3>
-          <p>水煮肉片</p>
-          <p>原料：猪肉，u部分v啊u饿不饿哎iu啊额氯苯胺率如果热iu八嘎vu你问给别人认为会给如果和</p>
-          <p>{{ selectedDish.description }}</p>
+          <p>原料：{{ selectedDish.raw }}</p>
+          <p>介绍：{{ selectedDish.intro }}</p>
         </div>
         <div>
           <div class="price-container">
-            <span class="price">¥{{ selectedDish.price }}</span>
+            <span class="price">单价：¥{{ selectedDish.price }}</span>
           </div>
           <div class="button-container">
             <div class="quantity-container">
@@ -66,97 +65,65 @@
         </div>
       </div>
     </div>
-<!--    -->
-    <div v-if="isCartVisible" class="cart">
-      <div class="cart-header">
-        <h2>购物车</h2>
-        <span class="close" @click="closeCart">关闭</span>
-      </div>
-      <div class="cart-items">
-        <div v-for="item in cartItems" :key="item.id" class="cart-item">
-          <div class="item-details">
-            <h4>{{ item.name }}</h4>
-            <p>价格: ¥{{ item.price }}</p>
-            <p>数量: {{ item.quantity }}</p>
-          </div>
-          <div class="item-actions">
-            <button @click="increaseQuantity(item)">+</button>
-            <button @click="decreaseQuantity(item)">-</button>
-            <button @click="removeFromCart(item)">删除</button>
-          </div>
+  </div>
+  <div class="cart-container" v-if="carts.length !== 0" @click="isCartOpen =! isCartOpen">
+    <div class="cart-label">购物车</div>
+    <div class="cart-total">总金额：¥{{totalPrice}}</div>
+    <button class="checkout-button" @click="checkout($event)">去结算</button>
+  </div>
+  <div class="cart" v-if="carts.length !== 0 && isCartOpen">
+    <div class="cart-items">
+      <div v-for="cart in carts" :key="cart.id" class="cart-item">
+        <div class="cart-img">
+          <img :src="cart.image" alt="Dish Image">
+        </div>
+        <div class="cart-details">
+          <p>{{ cart.name }}</p>
+          <p>价格: ¥{{ cart.price }}</p>
+          <p>数量: {{ cart.quantity }}</p>
+        </div>
+        <div class="cart-actions">
+          <button @click="cartIncreaseQuantity(cart)">+</button>
+          <button @click="cartDecreaseQuantity(cart)">-</button>
+          <button @click="removeCart(cart)">删除</button>
         </div>
       </div>
-      <div class="cart-total">
-        <p>总价: ¥{{ total }}</p>
-        <button @click="checkout">去结算</button>
-      </div>
     </div>
-<!--    -->
   </div>
-
 </template>
 
 <script>
+import axios from "axios";
+import {ElMessage} from "element-plus";
+
+
+
 export default {
   name: 'Dashboard',
   data() {
     return {
-      //
-      isCartVisible: false,
-      cartItems: [],
-      //
       selectedMenu: null, // 当前选中的菜单项的 ID
-      searchQuery: '',
-      isModalOpen: false, // 模态框的显示状态
+      searchQuery: '', //输入框中的内容
+      isCartOpen:false,//购物车模态框显示状态
+      isModalOpen: false, // 菜品模态框的显示状态
       selectedDish: null, // 当前选中的菜品
-      quantity: 1, // 初始化数量为1
+      quantity: 0, // 初始化数量为0
       user: {
-        name: 'John Doe',
-        avatar: 'public/img/R-C.jpg'
+        name: window.localStorage.getItem('phoneNum'),
+        avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
       },
       menuItems: [
-        { id: 1, label: 'Menu Item 1' },
-        { id: 2, label: 'Menu Item 2' },
-        { id: 3, label: 'Menu Item 3' }
+
       ],
       dishes: [
-        { id: 1, name: 'Dish 1', image: 'public/img/R-C.jpg', price: 199, label: 'Menu Item 1'},
-        { id: 2, name: 'Dish 2', image: 'public/img/R-C.jpg', price: 243, label: 'Menu Item 1'},
-        { id: 3, name: 'Dish 3', image: 'public/img/R-C.jpg', price: 1923, label: 'Menu Item 1'},
-        { id: 4, name: 'Dish 4', image: 'public/img/R-C.jpg', price: 133, label: 'Menu Item 2'},
-        { id: 5, name: 'Dish 5', image: 'public/img/R-C.jpg', price: 14, label: 'Menu Item 2'},
-        { id: 6, name: 'Dish 1', image: 'public/img/R-C.jpg', price: 19, label: 'Menu Item 1'},
-        { id: 7, name: 'Dish 2', image: 'public/img/R-C.jpg', price: 1499, label: 'Menu Item 3'},
-        { id: 8, name: 'Dish 3', image: 'public/img/R-C.jpg', price: 1959, label: 'Menu Item 3'},
-        { id: 9, name: 'Dish 4', image: 'public/img/R-C.jpg', price: 1929, label: 'Menu Item 2'},
-        { id: 10, name: 'Dish 5', image: 'public/img/R-C.jpg', price: 1979, label: 'Menu Item 2'}
-      ]
+
+      ],
+      carts: [
+
+      ],
     };
   },
   methods: {
-    //
-    openCart() {
-      this.isCartVisible = true;
-    },
-    closeCart() {
-      this.isCartVisible = false;
-    },
-    addToCart(item) {
-      // 添加商品到购物车逻辑...
-      this.cartItems.push(item);
-      this.openCart();
-    },
-    removeFromCart(item) {
-      const index = this.cartItems.indexOf(item);
-      if (index > -1) {
-        this.cartItems.splice(index, 1);
-      }
-    },
-    checkout() {
-      // 结算逻辑...
-    },
-    //
-    // ...原有方法...
     selectMenu(menuId) {
       this.selectedMenu = menuId;
       this.searchQuery = ''; // 重置搜索框内容
@@ -164,7 +131,12 @@ export default {
 
     openModal(dish) {
       this.selectedDish = dish; // 设置当前选中的菜品
-      this.quantity = 1;
+      const existingDish =this.carts.find(dish => dish.id === this.selectedDish.id);
+      if(existingDish){
+        this.quantity = existingDish.quantity;
+      }else{
+        this.quantity = 0;
+      }
       this.isModalOpen = true; // 打开模态框
     },
 
@@ -177,10 +149,84 @@ export default {
     },
 
     decreaseQuantity() {
-      if (this.quantity > 1) {
-        this.quantity--; // 减少数量，但不会低于1
+      if (this.quantity > 0) {
+        this.quantity--; // 减少数量，但不会低于0
       }
     },
+
+    addToCart() {
+      const existingDish = this.carts.find(dish => dish.id === this.selectedDish.id);
+
+      if (existingDish) {
+        existingDish.quantity = this.quantity;
+      } else {
+        const newDish = {
+          id: this.selectedDish.id,
+          name: this.selectedDish.name,
+          price: this.selectedDish.price,
+          image: this.selectedDish.image,
+          quantity: this.quantity
+        };
+        if(newDish.quantity === 0) {
+          newDish.quantity++;
+        }
+        this.carts.push(newDish);
+      }
+
+      this.closeModal();
+    },
+
+    cartIncreaseQuantity(cart) {
+      cart.quantity++;
+    },
+
+    cartDecreaseQuantity(cart) {
+      cart.quantity--;
+      if(cart.quantity<=0){
+        this.removeCart(cart);
+      }
+    },
+
+    removeCart(cart) {
+      const index = this.carts.indexOf(cart);
+      if (index > -1) {
+        this.carts.splice(index, 1);
+      }
+      if(this.carts.length === 0){
+        this.isCartOpen = false;
+      }
+    },
+
+    checkout(ev) {
+      // 发送购物车信息到后端进行结算
+      ev.stopPropagation();
+      axios.post('/checkout', { carts: this.carts })
+          .then(response => {
+            // 结算成功，可以根据后端返回的结果进行相应的处理
+            // 例如清空购物车、跳转到支付页面等
+            this.carts = []; // 清空购物车
+            this.isCartOpen = false; // 关闭购物车模态框
+            // 其他处理逻辑...
+
+            // 显示结算成功的消息
+            ElMessage({
+              type: "success",
+              message: "结算成功！"
+            });
+          })
+          .catch(error => {
+            // 结算失败，可以根据后端返回的错误信息进行相应的处理
+            // 例如显示错误提示、跳转到错误页面等
+            // 其他处理逻辑...
+
+            // 显示结算失败的消息
+            ElMessage({
+              type: "error",
+              message: "结算失败，请稍后重试！"
+            });
+          });
+    },
+
   },
   computed: {
     filDishes() {
@@ -196,10 +242,38 @@ export default {
 
       return filteredDishes;
     },
-    total() {
-      return this.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    totalPrice() {
+      let price = 0;
+      for(let i=0 ; i<this.carts.length ; i++){
+        price = price+this.carts[i].price*this.carts[i].quantity;
+      }
+      return price;
     },
-  }
+  },
+  async mounted() {
+    const api = axios.create({ baseURL: 'http://localhost:8080' });
+    api.get('/getMenu')
+        .then(response => {
+          this.dishes = response.data;
+          const set = new Set();
+          this.dishes.forEach(item => {
+            set.add(item.label);
+          });
+          const menuCategories = Array.from(set);
+          this.menuItems = menuCategories.map((category, index) => {
+            return {
+              id: index + 1,
+              label: category
+            };
+          });
+        })
+        .catch(error => {
+          ElMessage({
+            type: "error",
+            message: "获取菜单失败，请稍后重试！"
+          });
+        });
+  },
 };
 </script>
 
@@ -355,8 +429,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 800px;
-  height: 600px;
+  width: 680px;
+  height: 510px;
   background-color: #fff;
   padding: 30px;
   border-radius: 10px;
@@ -435,62 +509,102 @@ export default {
   /*模态框按钮悬浮样式*/
   background-color: #690124;
 }
-/*菜品模态框样式begin*/
+/*菜品模态框样式end*/
 
-.cart {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.cart-container {
+  border: black solid 1px;
   width: 400px;
-  padding: 20px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.cart-header {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 10px;
+  border-radius: 10px;
 }
 
-.cart-items {
-  margin-bottom: 20px;
-}
-
-.cart-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.item-details {
-  flex: 1;
-}
-
-.item-actions button {
-  margin-left: 5px;
-}
-
-.cart-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cart-total p {
+.cart-label {
+  margin-right: 10px;
   font-weight: bold;
 }
 
-.cart-total button {
-  padding: 10px;
-  background-color: #850220;
+.cart-total {
+  flex: 1;
+  text-align: center;
+}
+
+.checkout-button {
+  padding: 10px 20px;
+  background-color: rgba(133, 2, 32, 0.7);
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.checkout-button:hover {
+  background-color: #690124;
+}
+
+.cart {
+  border: black solid 1px;
+  width: 400px;
+  max-height: 500px;
+  min-height: 300px;
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgb(255, 255, 255);
+  padding: 10px;
+  border-radius: 10px;
+  overflow: auto;
+  -ms-overflow-style: none;
+}
+
+.cart-item{
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.cart-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.cart-img img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-details{
+  width: 200px;
+  height: 80px;
+  font-size: 16px;
+  line-height: 16px;
+}
+.cart-details :first-child {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.cart-details p {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.cart-actions {
+  width: 90px;
+  height: 80px;
 }
 </style>

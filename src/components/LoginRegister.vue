@@ -59,11 +59,13 @@ export default {
             message: "请输入手机号！"
           });
         } else {
-          api.post('/admin/login', { username: this.phoneNumber, type: this.selectedRole})
+          api.post('/login', { username: this.phoneNumber, type: this.selectedRole})
               .then(response => {
                 // 处理登录成功逻辑
                 console.log('用户登录成功！');
                 // noinspection JSUnresolvedFunction
+                //将信息保存到本地
+                localStorage.setItem('phoneNum',this.phoneNumber);
                 this.$router.push('/user')
                 // 在这里进行跳转逻辑，例如使用路由进行页面跳转
               })
@@ -84,7 +86,7 @@ export default {
             message: "请输入用户名或密码！"
           });
         } else {
-          api.post('/admin/login', { username: this.username, password: this.password, type: this.selectedRole})
+          api.post('/login', { username: this.username, password: this.password, type: this.selectedRole})
               .then(response => {
                 // 处理登录成功逻辑
                 console.log('外卖员登录成功！');
@@ -108,34 +110,23 @@ export default {
             message: "请输入用户名或密码！"
           });
         } else {
-          api.post('/admin/login', {
-            username: this.username,
-            password: this.password,
-            type: this.selectedRole
-          }, {validateStatus: status => true})
+          api.post('/login', {username: this.username, password: this.password, type: this.selectedRole})
               .then(response => {
-                if (response.status >= 200 && response.status < 300) {
                   // 处理登录成功逻辑
                   console.log('管理员登录成功！');
                   console.log(response);
+                  //将信息保存到本地
+                  localStorage.setItem('phoneNum',this.phoneNumber);
                   this.$router.push('/user')
 
                   // 在这里进行跳转逻辑，例如使用路由进行页面跳转
-                } else {
-                  // 处理登录失败逻辑
-                  console.error('管理员登录失败：', response);
-                  ElMessage({
-                    type: "error",
-                    message: "登录失败，请稍后重试！"
-                  });
-                }
               })
               .catch(error => {
                 // 处理请求异常
-                console.error('请求异常：', error);
+                console.error('管理员登陆失败：', error);
                 ElMessage({
                   type: "error",
-                  message: "请求异常，请稍后重试！"
+                  message: "登陆失败，请稍后重试！"
                 });
               });
         }
