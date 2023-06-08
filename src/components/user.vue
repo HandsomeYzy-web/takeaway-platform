@@ -131,7 +131,7 @@ export default {
 
     openModal(dish) {
       this.selectedDish = dish; // 设置当前选中的菜品
-      const existingDish =this.carts.find(dish => dish.id === this.selectedDish.id);
+      const existingDish =this.carts.find(dish => dish.menu_id === this.selectedDish.id);
       if(existingDish){
         this.quantity = existingDish.quantity;
       }else{
@@ -155,13 +155,17 @@ export default {
     },
 
     addToCart() {
-      const existingDish = this.carts.find(dish => dish.id === this.selectedDish.id);
+      const existingDish = this.carts.find(dish => dish.menu_id === this.selectedDish.id);
 
       if (existingDish) {
-        existingDish.quantity = this.quantity;
+        if(this.quantity === 0) {
+          this.removeCart(existingDish);
+        } else {
+          existingDish.quantity = this.quantity;
+        }
       } else {
         const newDish = {
-          id: this.selectedDish.id,
+          menu_id: this.selectedDish.id,
           name: this.selectedDish.name,
           price: this.selectedDish.price,
           image: this.selectedDish.image,
@@ -200,31 +204,24 @@ export default {
     checkout(ev) {
       // 发送购物车信息到后端进行结算
       ev.stopPropagation();
-      axios.post('/checkout', { carts: this.carts })
+      const api = axios.create({ baseURL: 'http://localhost:8080' });
+      let newCarts = [];
+      const Num = this.user.name;
+      for(let i = 0 ; i < this.carts.length ; i++){
+        const newCart = {
+          userName: Num,
+          menu_id: this.carts[i].menu_id,
+          quantity: this.carts[i].quantity
+        }
+        newCarts.push(newCart);
+      }
+      console.log(newCarts);
+      api.post('/settleCarts',newCarts)
           .then(response => {
-            // 结算成功，可以根据后端返回的结果进行相应的处理
-            // 例如清空购物车、跳转到支付页面等
-            this.carts = []; // 清空购物车
-            this.isCartOpen = false; // 关闭购物车模态框
-            // 其他处理逻辑...
-
-            // 显示结算成功的消息
-            ElMessage({
-              type: "success",
-              message: "结算成功！"
-            });
+            this.$router.push('/settleAccount');
           })
-          .catch(error => {
-            // 结算失败，可以根据后端返回的错误信息进行相应的处理
-            // 例如显示错误提示、跳转到错误页面等
-            // 其他处理逻辑...
 
-            // 显示结算失败的消息
-            ElMessage({
-              type: "error",
-              message: "结算失败，请稍后重试！"
-            });
-          });
+
     },
 
   },
@@ -273,6 +270,21 @@ export default {
             message: "获取菜单失败，请稍后重试！"
           });
         });
+    try {
+      const response = await api.get("/getCarts", {
+        params: {
+          userName: this.user.name
+        }
+      });
+
+      // 从后端获取购物车数据和总金额
+      this.carts = response.data;
+    } catch (error) {
+      ElMessage({
+        type: "error",
+        message: "获取购物车失败，请稍后重试！"
+      });
+    }
   },
 };
 </script>
