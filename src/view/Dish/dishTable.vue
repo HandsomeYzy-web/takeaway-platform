@@ -6,28 +6,38 @@
 
     <div>
       <el-button type="primary" @click="showAddDialog = true">新增</el-button>
-      <el-table :data="filteredData" style="width: 100%" border>
+      <!--      <el-table :data="filteredData" style="width: 100%" border>-->
+      <el-table :data="pagedData" style="width: 100%" border>
         <el-table-column label="Name" prop="name"/>
         <el-table-column label="Label" prop="label"/>
         <el-table-column label="Price" prop="price"/>
         <el-table-column label="Intro" prop="intro"/>
         <el-table-column label="Raw" prop="raw"/>
-<!--        <el-table-column label="Image" prop="image">-->
-<!--&lt;!&ndash;          <template #default="scope">&ndash;&gt;-->
-<!--&lt;!&ndash;              <img :src="scope.row.image" style="width: 100px; height: 100px;">&ndash;&gt;-->
-<!--&lt;!&ndash;&lt;!&ndash;            <img :src="getImageUrl(scope.row.image)" style="width: 100px; height: 100px;">&ndash;&gt;&ndash;&gt;-->
-<!--&lt;!&ndash;          </template>&ndash;&gt;-->
-<!--        </el-table-column>-->
+        <el-table-column label="Image" prop="image">
+          <template #default="scope">
+            <img :src="scope.row.image" style="width: 100px; height: 100px;">
+          </template>
+        </el-table-column>
 
         <el-table-column align="right">
           <template #default="scope">
-            <!--            <template v-if="editedIndex !== scope.$index">-->
             <el-button size="default" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
             <el-button size="default" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-            <!--            </template>-->
           </template>
         </el-table-column>
       </el-table>
+
+
+      <el-pagination
+          @size-change="handlePageSizeChange"
+          @current-change="handlePageChange"
+          :current-page="currentPage"
+          :page-sizes="[5, 10, 20]"
+          :page-size="pageSize"
+          :total="filteredData.length"
+          layout="total, sizes, prev, pager, next, jumper"
+      ></el-pagination>
+
       <el-dialog v-model="showAddDialog" title="新增数据">
         <el-form :model="addForm">
           <el-form-item label="Name" :label-width="formLabelWidth">
@@ -45,9 +55,10 @@
           <el-form-item label="Raw" :label-width="formLabelWidth">
             <el-input v-model="addForm.raw" autocomplete="off"/>
           </el-form-item>
-<!--          <el-form-item label="Image" :label-width="formLabelWidth">-->
-<!--            <el-input v-model="addForm.image" autocomplete="off"/>-->
-<!--          </el-form-item>-->
+          <el-form-item label="Image" :label-width="formLabelWidth">
+            <el-input v-model="addForm.image" autocomplete="off" />
+          </el-form-item>
+
         </el-form>
         <template #footer>
           <span class="dialog-footer">
@@ -74,9 +85,12 @@
           <el-form-item label="Raw" :label-width="formLabelWidth">
             <el-input v-model="editedItem.raw" autocomplete="off"/>
           </el-form-item>
-<!--          <el-form-item label="Image" :label-width="formLabelWidth">-->
-<!--            <el-input v-model="editedItem.image" autocomplete="off"/>-->
-<!--          </el-form-item>-->
+
+          <el-form-item label="Image" :label-width="formLabelWidth">
+            <el-input v-model="editedItem.image" autocomplete="off" />
+          </el-form-item>
+
+
         </el-form>
         <template #footer>
           <span class="dialog-footer">
@@ -106,7 +120,7 @@ export default {
         price: "",
         intro: "",
         raw: "",
-        // image: ""
+        image: "",
       },
       searchText: "",
       showAddDialog: false,
@@ -117,9 +131,11 @@ export default {
         price: "",
         intro: "",
         raw: "",
-        // image: ""
+        image: ""
       },
-      formLabelWidth: "120px"
+      formLabelWidth: "120px",
+      currentPage: 1,
+      pageSize: 5,
     };
   },
   computed: {
@@ -131,17 +147,27 @@ export default {
       return this.filterTableData.filter(item => {
         return item.name.toLowerCase().includes(keyword);
       });
-    }
+    },
+
+
+    pagedData() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.filteredData.slice(start, end);
+    },
+
+
   },
   methods: {
+
+    handlePageChange(currentPage) {
+      this.currentPage = currentPage;
+    },
+
+
     handleDelete(index, row) {//删除
       const id = row.id;
       const apiUrl = `http://localhost:8080/menu/${id}`;
-      // ElMessage({
-      //   showClose: true,
-      //   message: 'Congrats, this is a success message.',
-      //   type: 'success',
-      // })
       axios
           .delete(apiUrl)
           .then(response => {
@@ -165,7 +191,7 @@ export default {
         price: "",
         intro: "",
         raw: "",
-        // image: ""
+        image: ""
       };
       ElMessage({
         showClose: true,
@@ -179,7 +205,7 @@ export default {
         price: this.addForm.price,
         intro: this.addForm.intro,
         raw: this.addForm.raw,
-        // image: this.addForm.image
+        image: this.addForm.image
       };
 
       const api = axios.create({baseURL: "http://localhost:8080"});
@@ -197,7 +223,6 @@ export default {
           .catch(error => {
             console.error(error);
           });
-
       this.showAddDialog = false;
       this.addForm = {
         name: "",
@@ -205,7 +230,7 @@ export default {
         price: "",
         intro: "",
         raw: "",
-        // image: ""
+        image: ""
       };
     },
     handleEdit(index, row) {//编辑
@@ -223,7 +248,7 @@ export default {
         price: "",
         intro: "",
         raw: "",
-        // image: ""
+        image: ""
       };
       ElMessage({
         showClose: true,
@@ -261,11 +286,9 @@ export default {
           });
     },
 
-    // getImageUrl(imagePath) {
-    //   // 获取图片的完整URL路径
-    //   return require('@/static/images/'+ imagePath);
-    // },
-
+    handlePageSizeChange(pageSize) {
+      this.pageSize = pageSize;
+    },
   },
   mounted() {//加载数据
     const api = axios.create({baseURL: "http://localhost:8080"});

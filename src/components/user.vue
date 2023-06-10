@@ -17,6 +17,9 @@
           {{ menuItem.label }}
         </li>
       </ul>
+      <div class="myOrder" @click="openMyOrder">
+        我的订单
+      </div>
     </div>
     <div class="content">
       <div class="search-bar">
@@ -129,6 +132,10 @@ export default {
       this.searchQuery = ''; // 重置搜索框内容
     },
 
+    openMyOrder() {
+      this.$router.push('/myOrder');
+    },
+
     openModal(dish) {
       this.selectedDish = dish; // 设置当前选中的菜品
       const existingDish =this.carts.find(dish => dish.menuId === this.selectedDish.id);
@@ -220,8 +227,6 @@ export default {
           .then(response => {
             this.$router.push('/settleAccount');
           })
-
-
     },
 
   },
@@ -354,6 +359,23 @@ export default {
   /*菜品分类点击*/
   background-color: #850220; /* 设置选中菜单项的背景色 */
   color: #ffffff; /* 设置选中菜单项的文字颜色 */
+}
+
+.myOrder {
+  /* 我的订单样式 */
+  padding: 10px;
+  background-color: #850220;
+  color: #ffffff;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  border: black 1px solid;
+}
+
+.myOrder:hover {
+  background-color: #690124;
 }
 /*页面左部大容器布局end*/
 

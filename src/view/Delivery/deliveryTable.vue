@@ -6,7 +6,7 @@
 
     <div>
       <el-button type="primary" @click="showAddDialog = true">新增</el-button>
-      <el-table :data="filteredData" style="width: 100%" border>
+      <el-table :data="pagedData" style="width: 100%" border>
         <el-table-column label="Username" prop="username" />
         <el-table-column label="Password" prop="password" />
         <el-table-column label="Identity" prop="type" />
@@ -21,20 +21,32 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <el-pagination
+          @size-change="handlePageSizeChange"
+          @current-change="handlePageChange"
+          :current-page="currentPage"
+          :page-sizes="[5, 10, 20]"
+          :page-size="pageSize"
+          :total="filteredData.length"
+          layout="total, sizes, prev, pager, next, jumper"
+      ></el-pagination>
+
+
       <el-dialog v-model="showAddDialog" title="新增数据">
         <el-form :model="addForm">
-<!--          <el-table-column label="Username" prop="username" />-->
-<!--          <el-table-column label="Password" prop="password" />-->
-<!--          <el-table-column label="Identity" prop="identity" />-->
+          <!--          <el-table-column label="Username" prop="username" />-->
+          <!--          <el-table-column label="Password" prop="password" />-->
+          <!--          <el-table-column label="Identity" prop="identity" />-->
           <el-form-item label="Username" :label-width="formLabelWidth">
             <el-input v-model="addForm.username" autocomplete="off"/>
           </el-form-item>
           <el-form-item label="Password" :label-width="formLabelWidth">
             <el-input v-model="addForm.password" autocomplete="off"/>
           </el-form-item>
-<!--          <el-form-item label="Identity" :label-width="formLabelWidth">-->
-<!--            <el-input v-model="addForm.identity" autocomplete="off"/>-->
-<!--          </el-form-item>-->
+          <!--          <el-form-item label="Identity" :label-width="formLabelWidth">-->
+          <!--            <el-input v-model="addForm.identity" autocomplete="off"/>-->
+          <!--          </el-form-item>-->
         </el-form>
         <template #footer>
           <span class="dialog-footer">
@@ -87,7 +99,9 @@ export default {
         password: "",
         type: ""
       },
-      formLabelWidth: "120px"
+      formLabelWidth: "120px",
+      currentPage: 1,
+      pageSize: 5,
     };
   },
   computed: {
@@ -99,9 +113,17 @@ export default {
       return this.filterTableData.filter(item => {
         return item.username.toLowerCase().includes(keyword);
       });
-    }
+    },
+    pagedData() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.filteredData.slice(start, end);
+    },
   },
   methods: {
+    handlePageChange(currentPage) {
+      this.currentPage = currentPage;
+    },
     handleDelete(index, row) {//删除
       const username = row.username;
       const apiUrl = `http://localhost:8080/user/${username}`;
@@ -207,8 +229,9 @@ export default {
             console.error("请求错误", error);
           });
     },
-
-
+    handlePageSizeChange(pageSize) {
+      this.pageSize = pageSize;
+    },
   },
   mounted() {//加载数据
     const api = axios.create({baseURL: "http://localhost:8080"});

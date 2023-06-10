@@ -1,8 +1,9 @@
 import {createRouter , createWebHashHistory ,RouteRecordRaw ,Router} from "vue-router";
 import LoginRegister from "../components/LoginRegister.vue";
 import user from "../components/user.vue";
-import settleAccount from "../components/settleAccount.vue"
-import delivery from "../components/delivery.vue"
+import settleAccount from "../components/settleAccount.vue";
+import delivery from "../components/delivery.vue";
+import myOrder from "../components/myOrder.vue";
 import user2 from "../view/User/user2.vue";
 import dish from "../view/Dish/dish.vue";
 import delivery2 from "../view/Delivery/delivery2.vue";
@@ -12,6 +13,7 @@ const routes : Array<RouteRecordRaw> = [
     {path: '/user', name:'user', component:user },
     {path: '/settleAccount',name: 'settleAccount', component:settleAccount},
     {path: '/delivery',name: 'delivery' ,component:delivery},
+    {path: '/myOrder', name: 'myOrder', component:myOrder},
     {path: '/HomeView', component: HomeView},
     {path: '/user2', component: user2},
     {path: '/dish', component: dish},

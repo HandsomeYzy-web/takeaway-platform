@@ -5,24 +5,21 @@
     </div>
 
     <div>
-      <el-table :data="filteredData" style="width: 100%" border>
+      <el-table :data="pagedData" style="width: 100%" border>
         <el-table-column label="Username" prop="username" />
         <el-table-column label="Password" prop="password" />
         <el-table-column label="Identity" prop="type" />
-
-<!--        <el-table-column align="right">-->
-<!--          <template #default="scope">-->
-<!--            <template v-if="editedIndex !== scope.$index">-->
-<!--&lt;!&ndash;              <el-button size="default" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>&ndash;&gt;-->
-<!--              <el-button size="default" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>-->
-<!--            </template>-->
-<!--&lt;!&ndash;            <template v-else>&ndash;&gt;-->
-<!--&lt;!&ndash;              <el-button size="default" @click="handleSave(scope.$index)">保存</el-button>&ndash;&gt;-->
-<!--&lt;!&ndash;              <el-button size="default" @click="handleCancel()">取消</el-button>&ndash;&gt;-->
-<!--&lt;!&ndash;            </template>&ndash;&gt;-->
-<!--          </template>-->
-<!--        </el-table-column>-->
       </el-table>
+
+      <el-pagination
+          @size-change="handlePageSizeChange"
+          @current-change="handlePageChange"
+          :current-page="currentPage"
+          :page-sizes="[5, 10, 20]"
+          :page-size="pageSize"
+          :total="filteredData.length"
+          layout="total, sizes, prev, pager, next, jumper"
+      ></el-pagination>
     </div>
   </div>
 </template>
@@ -41,7 +38,9 @@ export default {
         password: "",
         type: ""
       },
-      searchText: ""
+      searchText: "",
+      currentPage: 1,
+      pageSize: 5,
     };
   },
   computed: {
@@ -53,46 +52,20 @@ export default {
       return this.filterTableData.filter(item => {
         return item.username.toLowerCase().includes(keyword);
       });
-    }
+    },
+    pagedData() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.filteredData.slice(start, end);
+    },
   },
   methods: {
-    // handleDelete(index, row) {
-    //   const id = row.id;
-    //   const apiUrl = `http://localhost:8080/user/${id}`;
-    //
-    //   axios
-    //       .delete(apiUrl)
-    //       .then(response => {
-    //         console.log("数据已成功删除", response.data);
-    //         this.filterTableData.splice(index, 1);
-    //       })
-    //       .catch(error => {
-    //         console.error("请求错误", error);
-    //       });
-    // },
-    // handleEdit(index, row) {
-    //   this.editedIndex = index;
-    //   this.editedItem = Object.assign({}, row);
-    // },
-    // handleSave(index) {
-    //   if (this.editedIndex === index) {
-    //     Object.assign(this.filterTableData[index], this.editedItem);
-    //     this.editedIndex = -1;
-    //     this.editedItem = {
-    //       username: "",
-    //       password: "",
-    //       identity: ""
-    //     };
-    //   }
-    // },
-    // handleCancel() {
-    //   this.editedIndex = -1;
-    //   this.editedItem = {
-    //     username: "",
-    //     password: "",
-    //     identity: ""
-    //   };
-    // }
+    handlePageChange(currentPage) {
+      this.currentPage = currentPage;
+    },
+    handlePageSizeChange(pageSize) {
+      this.pageSize = pageSize;
+    },
   },
   mounted() {
     const api = axios.create({ baseURL: 'http://localhost:8080' });
