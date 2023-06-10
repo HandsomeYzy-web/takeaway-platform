@@ -112,6 +112,19 @@ export default {
     };
   },
   methods: {
+    getNoeDate() {
+      let date = new Date();
+      const DD = String(date.getDate()).padStart(2, '0'); // 获取日
+      const MM = String(date.getMonth() + 1).padStart(2, '0'); //获取月份，1 月为 0
+      const yyyy = date.getFullYear(); // 获取年
+
+      const hh =  String(date.getHours()).padStart(2, '0');       //获取当前小时数(0-23)
+      const mm = String(date.getMinutes()).padStart(2, '0');     //获取当前分钟数(0-59)
+      const ss = String(date.getSeconds()).padStart(2, '0');     //获取当前秒数(0-59)
+
+      date = yyyy + '.' + MM + '.' + DD + ' ' + hh + ':' + mm + ':' + ss;
+      return date;
+    },
     confirmOrder() {
       if (this.selectedPaymentMethod === "") {
         ElMessage({
@@ -124,8 +137,42 @@ export default {
           message: "请填写完整的收货信息！"
         });
       } else {
-        // 执行结算操作
-        alert("订单已确认，感谢您的购买！");
+        const randomNumber = Math.floor(Math.random() * 900000) + 100000;
+        const orderNum = randomNumber + this.username.substring(3,7);
+        const order = {username: this.username ,orderNum: orderNum, status: 0 ,totalPrice: this.totalPrice, orderTime: this.getNoeDate() , phoneNum: this.shippingInfo.number , name: this.shippingInfo.name , address: this.shippingInfo.address};
+        const orderdetails = this.carts.map(item => ({
+          orderNum: orderNum,
+          menuId: item.menuId,
+          quantity: item.quantity
+        }));
+        const api = axios.create({baseURL: "http://localhost:8080" });
+        api.delete('/deleteCarts',{params:{username:this.username}})
+            .then(response =>{
+              api.post('/insertOrder',order)
+                  .then(response =>{
+                    api.post('/insertOrderDetails',orderdetails)
+                        .then(response =>{
+                          alert("订单已确认，欢迎再次购买！");
+                          this.$router.push('/user')
+                        }).catch(error =>{
+                          ElMessage({
+                            type: "error",
+                            message: "订单处理失败，请稍后重试！"
+                      });
+                    })
+                  }).catch(error =>{
+                    ElMessage({
+                      type: "error",
+                      message: "订单处理失败，请稍后重试！"
+                });
+              })
+            })
+            .catch(error =>{
+              ElMessage({
+                type: "error",
+                message: "订单处理失败，请稍后重试！"
+              });
+        })
       }
     },
     validateShippingInfo() {

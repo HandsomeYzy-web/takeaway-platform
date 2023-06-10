@@ -91,7 +91,8 @@ export default {
                 // 处理登录成功逻辑
                 console.log('外卖员登录成功！');
                 // 在这里进行跳转逻辑，例如使用路由进行页面跳转
-                this.$router.push('/user')
+                localStorage.setItem('delivery',this.username);
+                this.$router.push('/delivery')
               })
               .catch(error => {
                 // 处理登录失败逻辑
@@ -117,7 +118,7 @@ export default {
                   console.log(response);
                   //将信息保存到本地
                   localStorage.setItem('phoneNum',this.phoneNumber);
-                  this.$router.push('/user')
+                  this.$router.push('/HomeView')
 
                   // 在这里进行跳转逻辑，例如使用路由进行页面跳转
               })

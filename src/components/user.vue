@@ -99,7 +99,7 @@ import {ElMessage} from "element-plus";
 
 
 export default {
-  name: 'Dashboard',
+  name: 'user',
   data() {
     return {
       selectedMenu: null, // 当前选中的菜单项的 ID
@@ -131,7 +131,7 @@ export default {
 
     openModal(dish) {
       this.selectedDish = dish; // 设置当前选中的菜品
-      const existingDish =this.carts.find(dish => dish.menu_id === this.selectedDish.id);
+      const existingDish =this.carts.find(dish => dish.menuId === this.selectedDish.id);
       if(existingDish){
         this.quantity = existingDish.quantity;
       }else{
@@ -155,7 +155,7 @@ export default {
     },
 
     addToCart() {
-      const existingDish = this.carts.find(dish => dish.menu_id === this.selectedDish.id);
+      const existingDish = this.carts.find(dish => dish.menuId === this.selectedDish.id);
 
       if (existingDish) {
         if(this.quantity === 0) {
@@ -165,7 +165,7 @@ export default {
         }
       } else {
         const newDish = {
-          menu_id: this.selectedDish.id,
+          menuId: this.selectedDish.id,
           name: this.selectedDish.name,
           price: this.selectedDish.price,
           image: this.selectedDish.image,
@@ -210,7 +210,7 @@ export default {
       for(let i = 0 ; i < this.carts.length ; i++){
         const newCart = {
           userName: Num,
-          menu_id: this.carts[i].menu_id,
+          menuId: this.carts[i].menuId,
           quantity: this.carts[i].quantity
         }
         newCarts.push(newCart);
